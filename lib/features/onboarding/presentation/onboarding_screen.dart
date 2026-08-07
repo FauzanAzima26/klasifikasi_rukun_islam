@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../widgets/onboarding_indicator.dart';
 import '../widgets/onboarding_page_content.dart';
+import '../../home/presentation/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -107,10 +108,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: AppPrimaryButton(
-                label: _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                label: _currentPage == _pages.length - 1
+                    ? 'Get Started'
+                    : 'Next',
                 onPressed: _currentPage == _pages.length - 1
                     ? () {
-                        // Placeholder for proceed action
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const HomeScreen(), // Pastikan nama class sesuai
+                          ),
+                        );
                       }
                     : _goToNextPage,
                 isExpanded: true,
