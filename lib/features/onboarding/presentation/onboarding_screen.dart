@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../widgets/onboarding_indicator.dart';
 import '../widgets/onboarding_page_content.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -60,11 +61,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                child: const Text('Skip'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      _pageController.animateToPage(
+                        _pages.length - 1,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                    child: const Text('Skip'),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -87,34 +99,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? AppColors.primary
-                        : AppColors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+            OnboardingIndicator(
+              currentPage: _currentPage,
+              itemCount: _pages.length,
             ),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: AppPrimaryButton(
                 label: _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                onPressed: _currentPage == _pages.length - 1 ? () {} : _goToNextPage,
+                onPressed: _currentPage == _pages.length - 1
+                    ? () {
+                        // Placeholder for proceed action
+                      }
+                    : _goToNextPage,
                 isExpanded: true,
-                icon: _currentPage == _pages.length - 1
-                    ? Icons.arrow_forward_rounded
-                    : Icons.arrow_forward_rounded,
+                icon: Icons.arrow_forward_rounded,
               ),
             ),
           ],
