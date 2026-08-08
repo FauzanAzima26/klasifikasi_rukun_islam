@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/app_primary_button.dart';
 import '../widgets/onboarding_indicator.dart';
 import '../widgets/onboarding_page_content.dart';
-import '../../home/presentation/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

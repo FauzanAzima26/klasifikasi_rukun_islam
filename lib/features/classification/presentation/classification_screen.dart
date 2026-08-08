@@ -171,12 +171,11 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
                       ),
                       const SizedBox(height: 16),
 
-                      // DROPDOWN 2: GANTI CARI AYAT DENGAN DROPDOWN AYAT
                       DropdownButtonFormField<Ayat>(
                         value: _selectedAyat,
                         hint: Text(
                           _selectedSurah == null ? 'Pilih surah terlebih dahulu' : 'Pilih Nomor Ayat',
-                          style: AppTextStyles.bodyMedium?.copyWith(
+                          style: AppTextStyles.bodyMedium.copyWith(
                             color: _selectedSurah == null ? AppColors.textSecondary : null,
                           ),
                         ),
