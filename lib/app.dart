@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
+import 'features/splash/presentation/splash_screen.dart';
 import 'features/onboarding/presentation/onboarding_screen.dart';
+import 'features/home/presentation/home_screen.dart';
+import 'features/classification/presentation/classification_screen.dart'; // Import halaman klasifikasi Anda
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -13,7 +16,15 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      home: const OnboardingScreen(),
+      
+      // KONFIGURASI NAVIGASI BAWAAN FLUTTER
+      initialRoute: '/', // Aplikasi otomatis memulai dari rute '/' (Splash)
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/classification': (context) => const ClassificationScreen(),
+      },
     );
   }
 }

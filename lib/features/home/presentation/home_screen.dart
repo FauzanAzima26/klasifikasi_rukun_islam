@@ -72,7 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   ];
 
-  int _selectedIndex = 0;
+  // Nilai indeks 0 karena halaman ini adalah beranda utama
+  final int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: _selectedIndex,
         onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          // Fungsi perpindahan halaman internal diatur otomatis oleh AppBottomNavigation Stateful Anda
         },
       ),
       body: SafeArea(
@@ -103,11 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: 'Selamat Datang',
                     ),
                     const SizedBox(height: 24),
+                    // 1. NAVIGASI BANNER UTAMA (HERO CARD)
                     HeroCard(
                       title: 'Mulai Belajar Rukun Islam',
                       description:
                           'Pelajari kandungan ayat Al-Qur\'an mengenai lima Rukun Islam menggunakan teknologi klasifikasi.',
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/classification');
+                      },
                     ),
                     const SizedBox(height: 24),
                     const HomeSearchBar(),
@@ -123,13 +125,10 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = _menuItems[index];
-                    return QuickMenuCard(item: item);
-                  },
-                  childCount: _menuItems.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = _menuItems[index];
+                  return QuickMenuCard(item: item);
+                }, childCount: _menuItems.length),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
@@ -150,13 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = _rukunItems[index];
-                    return RukunCard(item: item);
-                  },
-                  childCount: _rukunItems.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = _rukunItems[index];
+                  return RukunCard(item: item);
+                }, childCount: _rukunItems.length),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: rukunColumns,
                   crossAxisSpacing: 16,
@@ -180,7 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const VerseCard(
                   surahNumber: '2',
                   surahName: 'Al-Baqarah',
-                  verseText: 'Yang telah Kami turunkan kepadamu Al-Qur\'an sebagai penjelas segala sesuatu.',
+                  verseText:
+                      'Yang telah Kami turunkan kepadamu Al-Qur\'an sebagai penjelas segala sesuatu.',
                 ),
               ),
             ),
@@ -198,7 +195,8 @@ class _HomeScreenState extends State<HomeScreen> {
               sliver: SliverToBoxAdapter(
                 child: const EmptyActivity(
                   title: 'Belum ada riwayat klasifikasi.',
-                  subtitle: 'Aktivitas terakhir akan ditampilkan setelah kamu melakukan klasifikasi.',
+                  subtitle:
+                      'Aktivitas terakhir akan ditampilkan setelah kamu melakukan klasifikasi.',
                 ),
               ),
             ),

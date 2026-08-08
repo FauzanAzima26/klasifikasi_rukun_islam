@@ -40,6 +40,12 @@ class _SplashScreenState extends State<SplashScreen>
         });
       }
     });
+
+    Future.delayed(const Duration(milliseconds: 4500), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
+    });
   }
 
   @override

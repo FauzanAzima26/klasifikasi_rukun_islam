@@ -15,7 +15,22 @@ class QuickMenuCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {},
+        onTap: () {
+          switch (item.title) {
+            case 'Klasifikasi':
+              Navigator.pushNamed(context, '/classification');
+              break;
+            case 'Riwayat':
+              Navigator.pushNamed(context, '/history');
+              break;
+            case 'Profil':
+              Navigator.pushNamed(context, '/profile');
+              break;
+            case 'Tentang':
+              Navigator.pushNamed(context, '/about');
+              break;
+          }
+        },
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(

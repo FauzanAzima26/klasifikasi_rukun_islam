@@ -113,13 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     : 'Next',
                 onPressed: _currentPage == _pages.length - 1
                     ? () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const HomeScreen(), // Pastikan nama class sesuai
-                          ),
-                        );
+                        Navigator.pushReplacementNamed(context, '/home');
                       }
                     : _goToNextPage,
                 isExpanded: true,
