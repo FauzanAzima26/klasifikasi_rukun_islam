@@ -20,6 +20,8 @@ class AppBottomNavigation extends StatelessWidget {
       selectedItemColor: AppColors.primary,
       unselectedItemColor: AppColors.textSecondary,
       showUnselectedLabels: true,
+      selectedLabelStyle: const TextStyle(fontSize: 11),
+      unselectedLabelStyle: const TextStyle(fontSize: 11),
       type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(

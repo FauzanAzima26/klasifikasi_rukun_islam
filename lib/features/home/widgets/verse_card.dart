@@ -37,11 +37,29 @@ class VerseCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(surahName, style: AppTextStyles.titleLarge),
-              const Spacer(),
-              TextButton(
-                onPressed: () {},
-                child: const Text('Baca Selengkapnya'),
+              Expanded(
+                child: Text(
+                  surahName,
+                  style: AppTextStyles.titleLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: () {},
+                  child: const Text(
+                    'Baca Selengkapnya',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
             ],
           ),
