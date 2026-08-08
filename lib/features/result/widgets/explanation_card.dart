@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../models/ayat.dart';
+import '../models/result.dart';
 
-class PreviewCard extends StatelessWidget {
-  const PreviewCard({
+class ExplanationCard extends StatelessWidget {
+  const ExplanationCard({
     super.key,
-    required this.ayat,
+    required this.result,
   });
 
-  final Ayat ayat;
+  final ClassificationResult result;
 
   @override
   Widget build(BuildContext context) {
@@ -25,19 +25,11 @@ class PreviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Preview', style: AppTextStyles.titleLarge.copyWith(color: AppColors.primary)),
-          const SizedBox(height: 16),
-          Text(ayat.surahName, style: AppTextStyles.labelLarge.copyWith(color: AppColors.textPrimary)),
-          const SizedBox(height: 8),
+          Text('Penjelasan', style: AppTextStyles.titleLarge.copyWith(color: AppColors.textPrimary)),
+          const SizedBox(height: 14),
           Text(
-            ayat.arabicText,
-            style: AppTextStyles.arabicDisplay,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            ayat.translation,
+            result.explanation,
+            textAlign: TextAlign.justify,
             style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
           ),
         ],

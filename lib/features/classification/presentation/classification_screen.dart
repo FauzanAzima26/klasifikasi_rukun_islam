@@ -17,7 +17,8 @@ class ClassificationScreen extends StatefulWidget {
   State<ClassificationScreen> createState() => _ClassificationScreenState();
 }
 
-class _ClassificationScreenState extends State<ClassificationScreen> with SingleTickerProviderStateMixin {
+class _ClassificationScreenState extends State<ClassificationScreen>
+    with SingleTickerProviderStateMixin {
   // Menyimpan data pilihan navigasi dropdown
   String? _selectedSurah;
   Ayat? _selectedAyat;
@@ -48,13 +49,10 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
       duration: const Duration(milliseconds: 200),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
 
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
@@ -70,11 +68,13 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
     super.dispose();
   }
 
+  // LOGIKA UTAMA: MEMICU PROSES ANALISIS & BERPINDAH KE HALAMAN HASIL
   Future<void> _handleAnalyze() async {
     setState(() {
       _isLoading = true;
     });
 
+    // Simulasi waktu pemrosesan model kecerdasan buatan (AI) selama 500 milidetik
     await Future<void>.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
 
@@ -91,9 +91,15 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
     });
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Analisis ayat berhasil (dummy).')),
-    );
+    // INTEGRASI NAVIGASI: Otomatis masuk ke halaman hasil klasifikasi setelah loading selesai
+    Navigator.pushNamed(context, '/result').then((_) {
+      if (mounted) {
+        setState(() {
+          _selectedSurah = null;
+          _selectedAyat = null;
+        });
+      }
+    });
   }
 
   void _showErrorDialog() {
@@ -128,10 +134,18 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text('Klasifikasi Ayat', style: AppTextStyles.titleLarge.copyWith(color: AppColors.textPrimary)),
+        title: Text(
+          'Klasifikasi Ayat',
+          style: AppTextStyles.titleLarge.copyWith(
+            color: AppColors.textPrimary,
+          ),
+        ),
         centerTitle: false,
       ),
       body: SafeArea(
@@ -142,17 +156,28 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // DROPDOWN 1: PILIHAN SURAH
                       DropdownButtonFormField<String>(
-                        value: _selectedSurah,
-                        hint: Text('Pilih Surah', style: AppTextStyles.bodyMedium),
+                        key: ValueKey(_selectedSurah),
+                        hint: Text(
+                          'Pilih Surah',
+                          style: AppTextStyles.bodyMedium,
+                        ),
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -165,34 +190,48 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
                         onChanged: (value) {
                           setState(() {
                             _selectedSurah = value;
-                            _selectedAyat = null; // Reset pilihan ayat saat ganti surah
+                            _selectedAyat =
+                                null; // Reset pilihan ayat saat ganti surah
                           });
                         },
                       ),
                       const SizedBox(height: 16),
 
+                      // DROPDOWN 2: PILIHAN NOMOR AYAT
                       DropdownButtonFormField<Ayat>(
-                        value: _selectedAyat,
+                        key: ValueKey(_selectedAyat),
                         hint: Text(
-                          _selectedSurah == null ? 'Pilih surah terlebih dahulu' : 'Pilih Nomor Ayat',
+                          _selectedSurah == null
+                              ? 'Pilih surah terlebih dahulu'
+                              : 'Pilih Nomor Ayat',
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: _selectedSurah == null ? AppColors.textSecondary : null,
+                            color: _selectedSurah == null
+                                ? AppColors.textSecondary
+                                : null,
                           ),
                         ),
                         decoration: InputDecoration(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
-                          fillColor: _selectedSurah == null ? Colors.grey[200] : Colors.white,
+                          fillColor: _selectedSurah == null
+                              ? Colors.grey[200]
+                              : Colors.white,
                         ),
-                        // Dropdown dinonaktifkan jika surah belum dipilih
                         items: _selectedSurah == null
                             ? null
                             : dynamicAyatList.map((ayat) {
                                 return DropdownMenuItem<Ayat>(
                                   value: ayat,
-                                  // Menampilkan label teks berupa nomor ayat
-                                  child: Text('Ayat ${ayat.verseNumber}', style: AppTextStyles.bodyLarge),
+                                  child: Text(
+                                    'Ayat ${ayat.verseNumber}',
+                                    style: AppTextStyles.bodyLarge,
+                                  ),
                                 );
                               }).toList(),
                         onChanged: _selectedSurah == null
@@ -210,9 +249,11 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
                         child: _selectedAyat == null
                             ? Center(
                                 child: Text(
-                                  'Silakan tentukan surah dan ayat untuk dianalisis.',
+                                  'Silakan tentukan surah and ayat untuk dianalisis.',
                                   textAlign: TextAlign.center,
-                                  style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               )
                             : SingleChildScrollView(
@@ -224,7 +265,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> with Single
                               ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // KARTU PRATINJAU (PREVIEW CARD)
                       PreviewCard(ayat: previewAyat),
                       const SizedBox(height: 16),
