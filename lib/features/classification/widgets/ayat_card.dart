@@ -19,39 +19,87 @@ class AyatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? AppColors.primarySoft : AppColors.surface,
+      color: isSelected
+          ? AppColors.primarySoft
+          : AppColors.surface,
       borderRadius: BorderRadius.circular(16),
+
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
+
         child: Container(
           width: double.infinity,
+
           padding: const EdgeInsets.all(16),
-          constraints: const BoxConstraints(minHeight: 112),
+
+          constraints: const BoxConstraints(
+            minHeight: 112,
+          ),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
-              Text(ayat.surahName, style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
+              // ==========================================
+              // NAMA SURAH
+              // ==========================================
+
+              Text(
+                ayat.surahName,
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+
               const SizedBox(height: 8),
+
+              // ==========================================
+              // AYAT ARAB
+              // ==========================================
+
               Text(
                 ayat.arabicText,
                 style: AppTextStyles.arabicDisplay,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+
+                // Tidak dibatasi 2 baris
+                maxLines: null,
+                softWrap: true,
               ),
-              const SizedBox(height: 8),
+
+              const SizedBox(height: 12),
+
+              // ==========================================
+              // TERJEMAHAN
+              // ==========================================
+
               Text(
                 ayat.translation,
-                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+
+                // Tidak dibatasi 2 baris
+                maxLines: null,
+                softWrap: true,
               ),
-              const Spacer(),
+
+              const SizedBox(height: 12),
+
+              // ==========================================
+              // NOMOR AYAT
+              // ==========================================
+
               Align(
                 alignment: Alignment.bottomRight,
+
                 child: Text(
                   'Ayat ${ayat.verseNumber}',
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],

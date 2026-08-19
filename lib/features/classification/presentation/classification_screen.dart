@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../data/dummy_ayat.dart';
+import '../services/quran_service.dart';
 import '../models/ayat.dart';
 import '../widgets/ayat_card.dart';
-import '../widgets/preview_card.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/error_dialog.dart';
 import '../../../core/theme/app_colors.dart';
@@ -19,7 +18,11 @@ class ClassificationScreen extends StatefulWidget {
 
 class _ClassificationScreenState extends State<ClassificationScreen>
     with SingleTickerProviderStateMixin {
-  // Menyimpan data pilihan navigasi dropdown
+  final QuranService _quranService = QuranService();
+  List<Ayat> _quranData = [];
+  bool _isQuranLoading = true;
+  String? _quranError;
+
   String? _selectedSurah;
   Ayat? _selectedAyat;
   bool _isLoading = false;
@@ -31,18 +34,22 @@ class _ClassificationScreenState extends State<ClassificationScreen>
 
   // 1. FITUR PILIH SURAH: Mengambil daftar nama surah unik secara otomatis dari data dummy
   List<String> get _surahList {
-    return dummyAyat.map((ayat) => ayat.surahName).toSet().toList();
+    return _quranData.map((ayat) => ayat.surahName).toSet().toList();
   }
 
   // 2. FILTER DROPDOWN AYAT: Menyaring daftar ayat berdasarkan surah yang dipilih
   List<Ayat> get _availableAyatList {
     if (_selectedSurah == null) return [];
-    return dummyAyat.where((ayat) => ayat.surahName == _selectedSurah).toList();
+    return _quranData
+        .where((ayat) => ayat.surahName == _selectedSurah)
+        .toList();
   }
 
   @override
   void initState() {
     super.initState();
+
+    _loadQuran();
 
     _animationController = AnimationController(
       vsync: this,
@@ -60,6 +67,28 @@ class _ClassificationScreenState extends State<ClassificationScreen>
     );
 
     _animationController.forward();
+  }
+
+  Future<void> _loadQuran() async {
+    try {
+      final data = await _quranService.loadQuran();
+
+      if (!mounted) return;
+
+      setState(() {
+        _quranData = data;
+        _isQuranLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isQuranLoading = false;
+        _quranError = e.toString();
+      });
+
+      debugPrint('Gagal memuat quran.json: $e');
+    }
   }
 
   @override
@@ -121,12 +150,28 @@ class _ClassificationScreenState extends State<ClassificationScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isQuranLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_quranError != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Klasifikasi Ayat')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Gagal memuat data Al-Qur’an.\n\n$_quranError',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     final surahs = _surahList;
     final dynamicAyatList = _availableAyatList;
     final isAnalyzeEnabled = _selectedAyat != null;
-
-    // Untuk preview card default, jika belum memilih, ambil data dummy pertama agar tidak eror
-    final previewAyat = _selectedAyat ?? dummyAyat.first;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -155,7 +200,7 @@ class _ClassificationScreenState extends State<ClassificationScreen>
               opacity: _fadeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 20,
@@ -163,13 +208,17 @@ class _ClassificationScreenState extends State<ClassificationScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // DROPDOWN 1: PILIHAN SURAH
+                      // ==========================================
+                      // DROPDOWN SURAH
+                      // ==========================================
                       DropdownButtonFormField<String>(
-                        key: ValueKey(_selectedSurah),
+                        initialValue: _selectedSurah,
+
                         hint: Text(
                           'Pilih Surah',
                           style: AppTextStyles.bodyMedium,
                         ),
+
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -181,25 +230,36 @@ class _ClassificationScreenState extends State<ClassificationScreen>
                           filled: true,
                           fillColor: Colors.white,
                         ),
+
                         items: surahs.map((surah) {
                           return DropdownMenuItem<String>(
                             value: surah,
                             child: Text(surah, style: AppTextStyles.bodyLarge),
                           );
                         }).toList(),
+
                         onChanged: (value) {
                           setState(() {
                             _selectedSurah = value;
-                            _selectedAyat =
-                                null; // Reset pilihan ayat saat ganti surah
+                            _selectedAyat = null;
                           });
+
+                          debugPrint('Surah dipilih: $_selectedSurah');
+
+                          debugPrint(
+                            'Jumlah ayat tersedia: ${_availableAyatList.length}',
+                          );
                         },
                       ),
+
                       const SizedBox(height: 16),
 
-                      // DROPDOWN 2: PILIHAN NOMOR AYAT
+                      // ==========================================
+                      // DROPDOWN AYAT
+                      // ==========================================
                       DropdownButtonFormField<Ayat>(
-                        key: ValueKey(_selectedAyat),
+                        initialValue: _selectedAyat,
+
                         hint: Text(
                           _selectedSurah == null
                               ? 'Pilih surah terlebih dahulu'
@@ -210,6 +270,7 @@ class _ClassificationScreenState extends State<ClassificationScreen>
                                 : null,
                           ),
                         ),
+
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -223,6 +284,7 @@ class _ClassificationScreenState extends State<ClassificationScreen>
                               ? Colors.grey[200]
                               : Colors.white,
                         ),
+
                         items: _selectedSurah == null
                             ? null
                             : dynamicAyatList.map((ayat) {
@@ -234,54 +296,72 @@ class _ClassificationScreenState extends State<ClassificationScreen>
                                   ),
                                 );
                               }).toList(),
+
                         onChanged: _selectedSurah == null
                             ? null
-                            : (value) {
+                            : (Ayat? value) {
+                                if (value == null) return;
+
                                 setState(() {
                                   _selectedAyat = value;
                                 });
+
+                                debugPrint(
+                                  'Ayat dipilih: '
+                                  '${value.surahName} ${value.verseNumber}',
+                                );
                               },
                       ),
+
                       const SizedBox(height: 24),
 
-                      // TAMPILAN UTAMA KARTU AYAT YANG DIPILIH
-                      Expanded(
-                        child: _selectedAyat == null
-                            ? Center(
-                                child: Text(
-                                  'Silakan tentukan surah and ayat untuk dianalisis.',
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.bodyLarge.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              )
-                            : SingleChildScrollView(
-                                child: AyatCard(
-                                  ayat: _selectedAyat!,
-                                  isSelected: true,
-                                  onTap: () {},
-                                ),
+                      if (_selectedAyat != null) ...[
+                        AyatCard(
+                          ayat: _selectedAyat!,
+                          isSelected: true,
+                          onTap: () {},
+                        ),
+
+                        const SizedBox(height: 20),
+                      ] else ...[
+                        SizedBox(
+                          height: 180,
+                          child: Center(
+                            child: Text(
+                              'Silakan tentukan surah dan ayat '
+                              'untuk dianalisis.',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: AppColors.textSecondary,
                               ),
-                      ),
-                      const SizedBox(height: 16),
+                            ),
+                          ),
+                        ),
 
-                      // KARTU PRATINJAU (PREVIEW CARD)
-                      PreviewCard(ayat: previewAyat),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 20),
+                      ],
 
-                      // TOMBOL EKSEKUSI KLASIFIKASI AI
+                      // ==========================================
+                      // TOMBOL ANALISIS
+                      // ==========================================
                       AppPrimaryButton(
                         label: 'Analisis Ayat',
                         onPressed: isAnalyzeEnabled ? _handleAnalyze : null,
                         isExpanded: true,
                       ),
+
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
             ),
+
+            // ==========================================
+            // LOADING
+            // ==========================================
             if (_isLoading) const LoadingOverlay(),
+
             if (_showDialog) _showErrorDialogWrapper(),
           ],
         ),
