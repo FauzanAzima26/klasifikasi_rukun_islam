@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../services/quran_service.dart';
+import '../../../core/services/quran_service.dart';
 import '../models/ayat.dart';
 import '../widgets/ayat_card.dart';
 import '../widgets/loading_overlay.dart';
-import '../widgets/error_dialog.dart';
+// import '../widgets/error_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/app_primary_button.dart';
+import '../../../core/services/api_service.dart';
 
 class ClassificationScreen extends StatefulWidget {
   const ClassificationScreen({super.key});
@@ -19,6 +20,7 @@ class ClassificationScreen extends StatefulWidget {
 class _ClassificationScreenState extends State<ClassificationScreen>
     with SingleTickerProviderStateMixin {
   final QuranService _quranService = QuranService();
+  final ApiService _apiService = ApiService();
   List<Ayat> _quranData = [];
   bool _isQuranLoading = true;
   String? _quranError;
@@ -26,7 +28,7 @@ class _ClassificationScreenState extends State<ClassificationScreen>
   String? _selectedSurah;
   Ayat? _selectedAyat;
   bool _isLoading = false;
-  bool _showDialog = false;
+  // bool _showDialog = false;
 
   late final AnimationController _animationController;
   late final Animation<Offset> _slideAnimation;
@@ -99,54 +101,77 @@ class _ClassificationScreenState extends State<ClassificationScreen>
 
   // LOGIKA UTAMA: MEMICU PROSES ANALISIS & BERPINDAH KE HALAMAN HASIL
   Future<void> _handleAnalyze() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // Simulasi waktu pemrosesan model kecerdasan buatan (AI) selama 500 milidetik
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-
     if (_selectedAyat == null) {
-      setState(() {
-        _showDialog = true;
-        _isLoading = false;
-      });
       return;
     }
 
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
-    if (!mounted) return;
 
-    // INTEGRASI NAVIGASI: Otomatis masuk ke halaman hasil klasifikasi setelah loading selesai
-    Navigator.pushNamed(context, '/result').then((_) {
-      if (mounted) {
-        setState(() {
-          _selectedSurah = null;
-          _selectedAyat = null;
-        });
-      }
-    });
+    try {
+      print('========== MULAI KLASIFIKASI ==========');
+
+      print(
+        'Ayat: ${_selectedAyat!.surahName} '
+        '${_selectedAyat!.verseNumber}',
+      );
+
+      print('Terjemahan:');
+      print(_selectedAyat!.translation);
+
+      print('Tafsir:');
+      print(_selectedAyat!.tafsir);
+
+      // Kirim ayat ke backend
+      final result = await _apiService.classify(ayat: _selectedAyat!);
+
+      print('========== HASIL API ==========');
+      print('Label: ${result.label}');
+      print('Confidence: ${result.confidence}');
+      print('================================');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Kirim ClassificationResult ke ResultScreen
+      Navigator.pushNamed(context, '/result', arguments: result);
+    } catch (e) {
+      print('========== ERROR KLASIFIKASI ==========');
+      print(e);
+      print('=======================================');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Klasifikasi gagal: $e')));
+    }
   }
 
-  void _showErrorDialog() {
-    if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      builder: (_) => ErrorDialog(
-        message: 'Silakan coba beberapa saat lagi.',
-        onClose: () {
-          if (!mounted) return;
-          setState(() {
-            _showDialog = false;
-          });
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-  }
+  // void _showErrorDialog() {
+  //   if (!mounted) return;
+  //   showDialog<void>(
+  //     context: context,
+  //     builder: (_) => ErrorDialog(
+  //       message: 'Silakan coba beberapa saat lagi.',
+  //       onClose: () {
+  //         if (!mounted) return;
+  //         setState(() {
+  //           _showDialog = false;
+  //         });
+  //         Navigator.of(context).pop();
+  //       },
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -362,19 +387,19 @@ class _ClassificationScreenState extends State<ClassificationScreen>
             // ==========================================
             if (_isLoading) const LoadingOverlay(),
 
-            if (_showDialog) _showErrorDialogWrapper(),
+            // if (_showDialog) _showErrorDialogWrapper(),
           ],
         ),
       ),
     );
   }
 
-  Widget _showErrorDialogWrapper() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_showDialog) {
-        _showErrorDialog();
-      }
-    });
-    return const SizedBox.shrink();
-  }
+  // Widget _showErrorDialogWrapper() {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     if (_showDialog) {
+  //       _showErrorDialog();
+  //     }
+  //   });
+  //   return const SizedBox.shrink();
+  // }
 }

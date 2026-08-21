@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../models/ayat.dart';
+import '../../features/classification/models/ayat.dart';
 
 class QuranService {
   static const String _assetPath = 'assets/data/quran.json';
