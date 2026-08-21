@@ -1,14 +1,56 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-app = Flask(__name__)
+import joblib
+from scipy.sparse import hstack
+import os
 
-# Mengizinkan Flutter mengakses API
+
+app = Flask(__name__)
 CORS(app)
 
 
 # ============================================================
-# TEST BACKEND
+# PATH MODEL
+# ============================================================
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+
+
+# ============================================================
+# LOAD MODEL
+# ============================================================
+
+print("\n========================================")
+print("MEMUAT MODEL")
+print("========================================")
+
+tfidf_terjemahan = joblib.load(
+    os.path.join(MODEL_DIR, "tfidf_terjemahan.pkl")
+)
+
+tfidf_tafsir = joblib.load(
+    os.path.join(MODEL_DIR, "tfidf_tafsir.pkl")
+)
+
+model = joblib.load(
+    os.path.join(MODEL_DIR, "svm_tfidf_calibrated.pkl")
+)
+
+
+print("TF-IDF terjemahan :", len(tfidf_terjemahan.vocabulary_))
+print("TF-IDF tafsir     :", len(tfidf_tafsir.vocabulary_))
+print("Model             :", type(model).__name__)
+print("Classes           :", model.classes_)
+
+print("========================================")
+print("MODEL BERHASIL DIMUAT")
+print("========================================\n")
+
+
+# ============================================================
+# HOME
 # ============================================================
 
 @app.route("/", methods=["GET"])
@@ -35,9 +77,6 @@ def classify():
 
         data = request.get_json()
 
-        print("\n========== REQUEST DITERIMA ==========")
-        print(data)
-
         if not data:
 
             return jsonify({
@@ -46,21 +85,18 @@ def classify():
             }), 400
 
 
-        # ====================================================
-        # 2. MENGAMBIL DATA AYAT
-        # ====================================================
-
-        surah_name = data.get("surahName")
-        verse_number = data.get("verseNumber")
-        arabic_text = data.get("arabicText")
-        translation = data.get("translation")
-
         terjemahan = data.get("terjemahan")
         tafsir = data.get("tafsir")
 
 
+        # Data ayat
+        surah_name = data.get("surahName")
+        verse_number = data.get("verseNumber")
+        arabic_text = data.get("arabicText")
+
+
         # ====================================================
-        # 3. VALIDASI
+        # 2. VALIDASI
         # ====================================================
 
         if not terjemahan:
@@ -80,19 +116,15 @@ def classify():
 
 
         # ====================================================
-        # 4. DEBUG
+        # 3. DEBUG
         # ====================================================
 
-        print("\n========== DATA AYAT ==========")
+        print("\n========================================")
+        print("DATA DITERIMA")
+        print("========================================")
 
         print("Surah       :", surah_name)
         print("Ayat        :", verse_number)
-
-        print("\nArab:")
-        print(arabic_text)
-
-        print("\nTranslation:")
-        print(translation)
 
         print("\nTerjemahan:")
         print(terjemahan)
@@ -100,63 +132,136 @@ def classify():
         print("\nTafsir:")
         print(tafsir)
 
-        print("\n================================")
+
+        # ====================================================
+        # 4. TF-IDF TERJEMAHAN
+        # ====================================================
+
+        X_terjemahan = tfidf_terjemahan.transform(
+            [terjemahan]
+        )
+
+        print("\nUkuran TF-IDF terjemahan:")
+        print(X_terjemahan.shape)
 
 
         # ====================================================
-        # 5. HASIL SEMENTARA
-        #
-        # NANTI BAGIAN INI DIGANTI DENGAN MODEL SVM
+        # 5. TF-IDF TAFSIR
         # ====================================================
 
-        label = "Shalat"
-        confidence = 94
+        X_tafsir = tfidf_tafsir.transform(
+            [tafsir]
+        )
+
+        print("\nUkuran TF-IDF tafsir:")
+        print(X_tafsir.shape)
 
 
         # ====================================================
-        # 6. KEMBALIKAN HASIL KE FLUTTER
+        # 6. GABUNGKAN FITUR
+        # ====================================================
+
+        X_combined = hstack([
+            X_terjemahan,
+            X_tafsir
+        ])
+
+        print("\nUkuran fitur gabungan:")
+        print(X_combined.shape)
+
+
+        # ====================================================
+        # 7. PREDIKSI
+        # ====================================================
+
+        prediction = model.predict(X_combined)[0]
+
+
+        # ====================================================
+        # 8. CONFIDENCE
+        # ====================================================
+
+        probabilities = model.predict_proba(
+            X_combined
+        )[0]
+
+        confidence = float(probabilities.max() * 100)
+
+
+        # ====================================================
+        # 9. DEBUG HASIL
+        # ====================================================
+
+        print("\n========================================")
+        print("HASIL KLASIFIKASI")
+        print("========================================")
+
+        print("Label      :", prediction)
+        print("Confidence :", confidence)
+
+        print("\nProbabilitas:")
+
+        for label, probability in zip(
+            model.classes_,
+            probabilities
+        ):
+
+            print(
+                f"{label:<20}: "
+                f"{probability * 100:.2f}%"
+            )
+
+        print("========================================\n")
+
+
+        # ====================================================
+        # 10. RESPONSE KE FLUTTER
         # ====================================================
 
         return jsonify({
 
             "success": True,
 
-            # hasil klasifikasi
-            "label": label,
-            "confidence": confidence,
+            "label": str(prediction),
 
-            # informasi hasil
+            "confidence": round(confidence, 2),
+
             "status": "Ayat berhasil diklasifikasikan",
 
             "explanation": (
-                "Hasil sementara dari backend. "
-                "Model SVM akan digunakan pada tahap berikutnya."
+                "Klasifikasi dilakukan menggunakan "
+                "TF-IDF dan SVM terkalibrasi."
             ),
 
-            # data ayat
+            # Data ayat dikembalikan ke Flutter
             "surahName": surah_name,
+
             "verseNumber": verse_number,
+
             "arabicText": arabic_text,
-            "translation": translation,
+
+            "translation": terjemahan,
 
             "message": "Klasifikasi berhasil"
 
         })
 
 
-    # ========================================================
-    # ERROR
-    # ========================================================
-
     except Exception as e:
 
-        print("\n========== ERROR ==========")
-        print(e)
-        print("===========================\n")
+        print("\n========================================")
+        print("ERROR KLASIFIKASI")
+        print("========================================")
+
+        print(str(e))
+
+        print("========================================\n")
+
 
         return jsonify({
 
             "success": False,
+
             "message": str(e)
 
         }), 500

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/services/quran_service.dart';
 import '../models/ayat.dart';
+import '../../result/models/result.dart';
 import '../widgets/ayat_card.dart';
 import '../widgets/loading_overlay.dart';
 // import '../widgets/error_dialog.dart';
@@ -123,8 +124,24 @@ class _ClassificationScreenState extends State<ClassificationScreen>
       print('Tafsir:');
       print(_selectedAyat!.tafsir);
 
-      // Kirim ayat ke backend
-      final result = await _apiService.classify(ayat: _selectedAyat!);
+      final apiResult = await _apiService.classify(
+        surahName: _selectedAyat!.surahName,
+        verseNumber: _selectedAyat!.verseNumber,
+        arabicText: _selectedAyat!.arabicText,
+        terjemahan: _selectedAyat!.translation,
+        tafsir: _selectedAyat!.tafsir,
+      );
+
+      final result = ClassificationResult(
+        label: apiResult['label'] as String,
+        status: apiResult['status'] as String,
+        confidence: (apiResult['confidence'] as num).toInt(),
+        surahName: apiResult['surahName'] as String,
+        verseNumber: (apiResult['verseNumber'] as num).toInt(),
+        arabicText: apiResult['arabicText'] as String,
+        translation: apiResult['translation'] as String,
+        explanation: apiResult['explanation'] as String,
+      );
 
       print('========== HASIL API ==========');
       print('Label: ${result.label}');
