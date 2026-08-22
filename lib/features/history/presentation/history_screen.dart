@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../classification/widgets/app_search_bar.dart';
 import '../../classification/widgets/filter_dropdown.dart';
-import '../data/dummy_history.dart';
 import '../models/history_item.dart';
 import '../widgets/history_list_item.dart';
 import '../widgets/history_empty_state.dart';
 import '../widgets/delete_dialog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/database/hive_service.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -30,27 +30,37 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   String _query = '';
   String _selectedFilter = 'Semua';
-  final List<HistoryItem> _items = List.from(dummyHistory);
+  List<HistoryItem> _items = [];
 
   List<HistoryItem> get _filteredItems {
     final q = _query.toLowerCase();
     return _items.where((it) {
-      final matchesFilter = _selectedFilter == 'Semua' || it.label == _selectedFilter;
-      final matchesQuery = it.surahName.toLowerCase().contains(q) || it.translation.toLowerCase().contains(q) || it.label.toLowerCase().contains(q) || it.verseNumber.toString().contains(q);
+      final matchesFilter =
+          _selectedFilter == 'Semua' || it.label == _selectedFilter;
+      final matchesQuery =
+          it.surahName.toLowerCase().contains(q) ||
+          it.translation.toLowerCase().contains(q) ||
+          it.label.toLowerCase().contains(q) ||
+          it.verseNumber.toString().contains(q);
       return matchesFilter && matchesQuery;
     }).toList();
   }
 
-  void _handleDelete(HistoryItem item) {
+  Future<void> _handleDelete(HistoryItem item) async {
     showDialog<void>(
       context: context,
       builder: (_) => DeleteDialog(
         title: 'Hapus riwayat ini?',
-        onConfirm: () {
-          setState(() {
-            _items.removeWhere((e) => e.id == item.id);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Hapus dummy.')));
+        onConfirm: () async {
+          await HiveService.box.delete(item.id);
+
+          _loadHistory();
+
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Riwayat berhasil dihapus.')),
+          );
         },
       ),
     );
@@ -62,6 +72,68 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  void _loadHistory() {
+    final box = HiveService.box;
+
+    final items = <HistoryItem>[];
+
+    for (final key in box.keys.toList().reversed) {
+      final rawData = box.get(key);
+
+      if (rawData is Map) {
+        final data = Map<String, dynamic>.from(rawData);
+
+        items.add(HistoryItem.fromHive(key, data));
+      }
+    }
+
+    setState(() {
+      _items = items;
+    });
+  }
+
+  Future<void> _handleClearHistory() async {
+    if (_items.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Hapus semua riwayat?'),
+          content: const Text('Semua riwayat klasifikasi akan dihapus.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await HiveService.clearHistory();
+
+    _loadHistory();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Semua riwayat berhasil dihapus.')),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final filtered = _filteredItems;
 
@@ -70,9 +142,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Riwayat', style: AppTextStyles.titleLarge.copyWith(color: AppColors.textPrimary)),
+        title: Text(
+          'Riwayat',
+          style: AppTextStyles.titleLarge.copyWith(
+            color: AppColors.textPrimary,
+          ),
+        ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.delete_outline_rounded, color: AppColors.textSecondary)),
+          IconButton(
+            onPressed: _handleClearHistory,
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
       body: SafeArea(
@@ -104,8 +187,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: filtered.isEmpty
                     ? const HistoryEmptyState()
                     : ListView.separated(
-                      itemCount: filtered.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemCount: filtered.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final item = filtered[index];
                           return HistoryListItem(

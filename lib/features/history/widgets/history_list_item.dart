@@ -52,7 +52,7 @@ class HistoryListItem extends StatelessWidget {
     final dateText = '${d.day.toString().padLeft(2, '0')} ${monthNames[d.month - 1]} ${d.year}';
 
     return Dismissible(
-      key: Key(item.id),
+      key: ValueKey(item.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -94,7 +94,7 @@ class HistoryListItem extends StatelessWidget {
                           child: Text(item.label, style: AppTextStyles.bodyMedium.copyWith(color: _badgeColor)),
                         ),
                         const SizedBox(height: 6),
-                        Text('${item.confidence}%', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary)),
+                        Text('${item.confidence.toStringAsFixed(2)}%', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textPrimary)),
                       ],
                     ),
                   ],
