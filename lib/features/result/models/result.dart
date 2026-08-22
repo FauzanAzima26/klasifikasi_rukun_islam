@@ -12,7 +12,7 @@ class ClassificationResult {
 
   final String label;
   final String status;
-  final int confidence;
+  final double confidence;
   final String surahName;
   final int verseNumber;
   final String arabicText;
@@ -27,7 +27,7 @@ class ClassificationResult {
 
       status: json['status'] ?? '',
 
-      confidence: (json['confidence'] ?? 0) as int,
+      confidence: (json['confidence'] ?? 0) as double,
 
       surahName: json['surahName'] ?? '',
 

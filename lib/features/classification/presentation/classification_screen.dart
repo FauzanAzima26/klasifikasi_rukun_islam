@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/services/quran_service.dart';
+import '../../../core/database/hive_service.dart';
 import '../models/ayat.dart';
 import '../../result/models/result.dart';
 import '../widgets/ayat_card.dart';
@@ -132,10 +133,29 @@ class _ClassificationScreenState extends State<ClassificationScreen>
         tafsir: _selectedAyat!.tafsir,
       );
 
+      print('========== API BERHASIL ==========');
+      print(apiResult);
+      print('==================================');
+
+      print('========== MENYIMPAN HIVE ==========');
+
+      await HiveService.saveClassification(
+        label: apiResult['label'] as String,
+        confidence: (apiResult['confidence'] as num).toDouble(),
+        status: apiResult['status'] as String,
+        surahName: apiResult['surahName'] as String,
+        verseNumber: (apiResult['verseNumber'] as num).toInt(),
+        arabicText: apiResult['arabicText'] as String,
+        translation: apiResult['translation'] as String,
+        explanation: apiResult['explanation'] as String,
+      );
+
+      print('========== HIVE SELESAI ==========');
+
       final result = ClassificationResult(
         label: apiResult['label'] as String,
         status: apiResult['status'] as String,
-        confidence: (apiResult['confidence'] as num).toInt(),
+        confidence: (apiResult['confidence'] as num).toDouble(),
         surahName: apiResult['surahName'] as String,
         verseNumber: (apiResult['verseNumber'] as num).toInt(),
         arabicText: apiResult['arabicText'] as String,
